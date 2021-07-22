@@ -1,0 +1,85 @@
+Int64 PSC;
+
+String pom, prov;
+Int Por;
+Int err_Psc1 = 0;
+Int err_Psc2 = 0;
+Int err_Psc3 = 0;
+Int err_Psc4 = 0;
+
+Por=1;
+
+for (Int i =0; i< Input_0.Records.Count; i++)
+   {
+   prov= Input_0.Records[i].Province; 
+   pom = Input_0.Records[i].PostCode;          //nacitanie
+   Por++;                                 //poradie v povodnej dttb pre jednoduchsie vyhladavanie
+   pom.trimAndReduceWhiteSpace();
+   pom.replace(" ", "");                  //odstranenie medzier
+   pom.replace("\X20", "");               //odstranenie pevnej medzery
+   
+   //--------------------LOG------------------------------------  
+   if (pom.isEmpty() )           //upozornuje na prazdne PSC
+      {  
+      Output_0.Records.pomocna="x";                             //oznacenie chybneho PSC
+      logMessage ("Prazdne PostCode: "+ Input_0.Records[i].PostCode+ "- Poradie: "+Por.toString());
+      err_Psc1++;
+      }
+   
+   if(pom.Length != 4 and pom.Length !=5 and pom.Length!=6 and not pom.isEmpty())    //kontrola tvaru PSC
+      {
+      Output_0.Records.pomocna="x";                            //oznacenie chybneho PSC
+      logMessage ("Zly tvar PostCode: "+ Input_0.Records[i].PostCode+ "- Poradie: "+Por.toString());
+      err_Psc2++;
+      }
+   
+ /*  if(tmp <992)    //Vacsie PSC 992+
+      {
+      Output_0.Records.pomocna="x";                            //oznacenie chybneho PSC
+      logMessage ("Zly tvar PostCode: "+ Input_0.Records[i].PostCode+ "- Poradie: "+Por.toString());
+      err_Psc2++;
+      }
+             */
+   if ((pom.Length==5 or pom.Length==6) and (pom.left(1)=="1" or pom.left(1)=="2" or pom.left(1)=="3" or pom.left(1)=="4" or pom.left(1)=="5" or pom.left(1)=="6" or pom.left(1)=="7"))     //zaciatocne cisla ktore nespadaju do SK
+          {
+      Output_0.Records.pomocna="x";                        //oznacenie chybneho tvaru PSC
+      logMessage("Zahraničie: "+ Input_0.Records[i].PostCode+ "- Poradie: "+Por.toString());
+      err_Psc3++;
+      }
+   
+   if (pom.Length==4 and pom.isNumeric(PSC))
+      {
+      pom.rightJustify(5, "0", true);      //doplnenie 0 ak chyba vlavo na 5 znakov len pre 4miestne
+      }
+   
+   if (not pom.isNumeric(PSC) and not pom.isEmpty())    //kontrola pismena v PSC
+      {
+      Output_0.Records.pomocna="x";                        //oznacenie chybneho PSC
+      logMessage("Zahraničie: "+ Input_0.Records[i].PostCode+ "- Poradie: "+Por.toString());
+      err_Psc3++;
+      }
+   
+    if (not(prov.left(1)=="S" and (prov.toLowerCase().contains("k") or prov.toLowerCase().contains("r"))))    //PROVINCE- PRE TESCO
+      {
+      Output_0.Records.pomocna="s";                        
+      logMessage("Zahraničie: "+ Input_0.Records[i].PostCode+ "- Poradie: "+Por.toString());
+      err_Psc3++;
+      }
+   
+   
+   if(pom=="00000" )
+      {
+      Output_0.Records.pomocna="x";                        //00000
+      logMessage("00000"+ Input_0.Records[i].PostCode+ "- Poradie: "+Por.toString());
+      err_Psc2++;
+      }  
+   
+   
+   Output_0.Records.PostCode_test = pom.left(3)+" " +pom.right(2);
+   Output_0.Records.crw_poradie= Input_0.Records[i].crw_Poradie;
+   Output_0.Records.commit();
+   }
+
+logWarning("Prazdne PSC: "+err_Psc1.toString());
+logWarning("Zly tvar PSC: "+err_Psc2.toString());
+logWarning("Zahranicie: "+err_Psc3.toString());
